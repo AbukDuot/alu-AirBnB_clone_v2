@@ -35,6 +35,7 @@ class HBNBCommand(cmd.Cmd):
 
     def do_update(self, args):
         """
+<<<<<<< HEAD
         Updates an instance based on the class name and id
         by adding or updating attribute (save the change
         into the JSON file).
@@ -108,6 +109,43 @@ class HBNBCommand(cmd.Cmd):
                                 print("** value missing **")
                         else:
                             print("** attribute name missing **")
+=======
+        _cmd = _cls = _id = _args = ''  # initialize line elements
+
+        # scan for general formating - i.e '.', '(', ')'
+        if not ('.' in line and '(' in line and ')' in line):
+            return line
+
+        try:  # parse line left to right
+            pline = line[:]  # parsed line
+
+            # isolate <class name>
+            _cls = pline[:pline.find('.')]
+
+            # isolate and validate <command>
+            _cmd = pline[pline.find('.') + 1:pline.find('(')]
+            if _cmd not in HBNBCommand.dot_cmds:
+                raise Exception
+
+            # if parantheses contain arguments, parse them
+            pline = pline[pline.find('(') + 1:pline.find(')')]
+            if pline:
+                # partition args: (<id>, [<delim>], [<*args>])
+                pline = pline.partition(', ')  # pline convert to tuple
+
+                # isolate _id, stripping quotes
+                _id = pline[0].replace('\"', '')
+                # possible bug here:
+                # empty quotes register as empty _id when replaced
+
+                # if arguments exist beyond _id
+                pline = pline[2].strip()  # pline is now str
+                if pline:
+                    # check for *args or **kwargs
+                    if pline[0] == '{' and pline[-1] == ' }'\
+                            and type(eval(pline)) == dict:
+                        _args = pline
+>>>>>>> 335196d845b8bfb21d0ef80615562698cbbbcb9b
                     else:
                         print("** no instance found **")
                 else:
@@ -115,6 +153,7 @@ class HBNBCommand(cmd.Cmd):
             else:
                 print("** class doesn't exist **")
 
+<<<<<<< HEAD
     def do_all(self, arg):
         """
         Prints all string representation of all instances
@@ -138,6 +177,55 @@ class HBNBCommand(cmd.Cmd):
                 print(display_all_list)
             else:
                 print("** class doesn't exist **")
+=======
+    def do_create(self, args):
+
+        """ Create an object of any class"""
+        try:
+            if not args:
+                raise SyntaxError()
+            list_args = args.split(" ")
+
+            kwargs = {}
+            for arg in range(1,len(list_args)):
+                key, value = tuple(list_args[arg].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
+                else:
+                    try:
+                        value = int(value)
+                    except (SyntaxError, NameError):
+                        continue
+                kwargs[key] = value
+
+                if kwargs == {}:
+                    obj = eval(list_args[0])()
+                else:
+                    obj = eval(list_args[0])(**kwargs)
+                    storage.new(obj)
+                    print(obj.id)
+                    obj.save()
+
+        except NameError:
+            print("** class doesn't exist **")  
+        except SyntaxError:
+            print("** class name missing **")
+
+    def help_create(self):
+        """ Help information for the create method """
+        print("Creates a class of any type")
+        print("[Usage]: create <className>\n")
+
+    def do_show(self, args):
+        """ Method to show an individual object """
+        new = args.partition(" ")
+        c_name = new[0]
+        c_id = new[2]
+
+        # guard against trailing args
+        if c_id and ' ' in c_id:
+            c_id = c_id.partition(' ')[0]
+>>>>>>> 335196d845b8bfb21d0ef80615562698cbbbcb9b
 
     def do_create(self, arg):
         """
@@ -220,6 +308,7 @@ class HBNBCommand(cmd.Cmd):
         list_args = args.split()
         if len(list_args) < 1:
             print("** class name missing **")
+<<<<<<< HEAD
         else:
             if list_args[0] in self.HBNBClasses:
                 if len(list_args) > 1:
@@ -240,6 +329,75 @@ class HBNBCommand(cmd.Cmd):
                     print("** instance id missing **")
             else:
                 print("** class doesn't exist **")
+=======
+            return
+        if c_name not in HBNBCommand.classes:  # class name invalid
+            print("** class doesn't exist **")
+            return
+
+        # isolate id from args
+        args = args[2].partition(" ")
+        if args[0]:
+            c_id = args[0]
+        else:  # id not present
+            print("** instance id missing **")
+            return
+
+        # generate key from class and id
+        key = c_name + "." + c_id
+
+        # determine if key is present
+        if key not in storage.all():
+            print("** no instance found **")
+            return
+
+        # first determine if kwargs or args
+        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) is dict:
+            kwargs = eval(args[2])
+            args = []  # reformat kwargs into list, ex: [<name>, <value>, ...]
+            for k, v in kwargs.items():
+                args.append(k)
+                args.append(v)
+        else:  # isolate args
+            args = args[2]
+            if args and args[0] == '\"':  # check for quoted arg
+                second_quote = args.find('\"', 1)
+                att_name = args[1:second_quote]
+                args = args[second_quote + 1:]
+
+            args = args.partition(' ')
+
+            # if att_name was not quoted arg
+            if not att_name and args[0] != ' ':
+                att_name = args[0]
+            # check for quoted val arg
+            if args[2] and args[2][0] == '\"':
+                att_val = args[2][1:args[2].find('\"', 1)]
+
+            # if att_val was not quoted arg
+            if not att_val and args[2]:
+                att_val = args[2].partition(' ')[0]
+
+            args = [att_name, att_val]
+
+        # retrieve dictionary of current objects
+        new_dict = storage.all()[key]
+
+        # iterate through attr names and values
+        for i, att_name in enumerate(args):
+            # block only runs on even iterations
+            if (i % 2 == 0):
+                att_val = args[i + 1]  # following item is value
+                if not att_name:  # check for att_name
+                    print("** attribute name missing **")
+                    return
+                if not att_val:  # check for att_value
+                    print("** value missing **")
+                    return
+                # type cast as necessary
+                if att_name in HBNBCommand.types:
+                    att_val = HBNBCommand.types[att_name](att_val)
+>>>>>>> 335196d845b8bfb21d0ef80615562698cbbbcb9b
 
     def do_quit(self, arg):
         """Quit command to exit the program"""
