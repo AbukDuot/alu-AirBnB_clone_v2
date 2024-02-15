@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
-sudo apt-get update
+ssh -i /root/.ssh/ssh_rsa ubuntu@34.229.12.144 << EOF
+sudo apt-get -y update
+sudo apt-get -y upgrade
 sudo apt-get -y install nginx
-sudo service start nginx
-
-mkdir -p /data/web_static/releases/test/
-sudo cat > /data/web_static/releases/test/index.html <<<"<html>
-  <head>
-  </head>
-  <body>
-<!--this code wont work without my name-->
-    Humphrey Nyahoja
-  </body>
-</html>"
-
+sudo mkdir -p /data/web_static/releases/test /data/web_static/shared
+echo "<html> <b>HUMPHREY NYAHOJA.</b> </html>" | sudo tee /data/web_static/releases/test/index.html
+sudo rm -rf /data/web_static/current
+sudo ln -s /data/web_static/releases/test/ /data/web_static/current
+sudo chown -R ubuntu:ubuntu /data/
+sudo sed -i '44i \\n\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t}' /etc/nginx/sites-available/default
+sudo service nginx restart
+EOF
