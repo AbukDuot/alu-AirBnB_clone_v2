@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#this script sets up web servers deployment of web_static
 ssh -i /root/.ssh/ssh_rsa ubuntu@34.229.12.144 << EOF
 sudo apt-get -y update
 sudo apt-get -y upgrade
