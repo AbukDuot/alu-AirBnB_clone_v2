@@ -12,7 +12,10 @@ env.user = "ubuntu"
 
 
 def do_deploy(archive_path):
-    """ Deploys an archive to web servers."""
+    """ 
+    Deploys an archive to web servers.
+    This function takes the path to an archive and deploys it to web servers.
+    """
     if not os.path.isfile(archive_path):
         return False
 
