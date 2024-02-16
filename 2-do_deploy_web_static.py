@@ -12,13 +12,6 @@ env.user = "ubuntu"
 def do_deploy(archive_path):
     """
     Deploys an archive to web servers.
-    - Returns False if the file at the path archive_path doesn’t exist
-    - Uploads the archive to the /tmp/ directory of the web server
-    - Uncompresses the archive to the folder /data/web_static/releases/<archive filename without extension> on the web server
-    - Deletes the archive from the web server
-    - Deletes the symbolic link /data/web_static/current from the web server
-    - Creates a new symbolic link /data/web_static/current on the web server, linked to the new version of your code
-    - Returns True if all operations have been done correctly, otherwise returns False
     """
     if not os.path.isfile(archive_path):
         return False
