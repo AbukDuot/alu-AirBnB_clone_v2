@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-"""Fabric script that creates and distributes an archive to your web servers"""
+"""Fabric script that creates."""
 
 import os
 from fabric.api import env, local, put, run
 from datetime import datetime
 from os.path import exists
 
-env.hosts = ["34.229.12.144", "54.234.186.18"]
+env.hosts = ["34.229.120.5", "54.147.154.1"]
 env.user = "ubuntu"
 env.key = "/root/.ssh/id_rsa"
 
