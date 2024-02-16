@@ -1,63 +1,110 @@
 #!/usr/bin/python3
-""" Function that deploys """
-from datetime import datetime
-from fabric.api import *
+"""Deployment"""
+
+from fabric.api import local, env, put, run
 import os
-import shlex
-
-
-env.hosts = ['34.229.120.5', '54.147.154.1']
-env.user = "ubuntu"
-
-
-def deploy():
-    """ DEPLOYS """
-    try:
-        archive_path = do_pack()
-    except:
-        return False
-
-    return do_deploy(archive_path)
+import re
+from datetime import datetime
+env.user = 'ubuntu'
+env.hosts = ['34.229.12.144','107.20.20.164']
 
 
 def do_pack():
-    try:
-        if not os.path.exists("versions"):
-            local('mkdir versions')
-        t = datetime.now()
-        f = "%Y%m%d%H%M%S"
-        archive_path = 'versions/web_static_{}.tgz'.format(t.strftime(f))
-        local('tar -cvzf {} web_static'.format(archive_path))
-        return archive_path
-    except:
+    """Function to compress files in an archive"""
+
+    local("mkdir -p versions")
+    filename = "versions/web_static_{}.tgz".format(
+        datetime.strftime(datetime.now(), "%Y%m%d%H%M%S"))
+    result = local("tar -cvzf {} web_static".format(filename))
+    if result.failed:
         return None
+    return filename
 
 
 def do_deploy(archive_path):
-    """ Deploys """
-    if not os.path.exists(archive_path):
+    """Deploy archive!"""
+    if not os.path.isfile(archive_path):
         return False
-    try:
-        name = archive_path.replace('/', ' ')
-        name = shlex.split(name)
-        name = name[-1]
 
-        wname = name.replace('.', ' ')
-        wname = shlex.split(wname)
-        wname = wname[0]
+    filename_regex = re.compile(r'[^/]+(?=\.tgz$)')
+    match = filename_regex.search(archive_path)
 
-        releases_path = "/data/web_static/releases/{}/".format(wname)
-        tmp_path = "/tmp/{}".format(name)
-
-        put(archive_path, "/tmp/")
-        run("mkdir -p {}".format(releases_path))
-        run("tar -xzf {} -C {}".format(tmp_path, releases_path))
-        run("rm {}".format(tmp_path))
-        run("mv {}web_static/* {}".format(releases_path, releases_path))
-        run("rm -rf {}web_static".format(releases_path))
-        run("rm -rf /data/web_static/current")
-        run("ln -s {} /data/web_static/current".format(releases_path))
-        print("New version deployed!")
-        return True
-    except:
+    # Upload the archive to the /tmp/ directory of the web server
+    archive_filename = match.group(0)
+    result = put(archive_path, "/tmp/{}.tgz".format(archive_filename))
+    if result.failed:
         return False
+
+    result = run(
+        "mkdir -p /data/web_static/releases/{}/".format(archive_filename))
+    if result.failed:
+        return False
+    result = run(
+        "tar -xzf /tmp/{}.tgz -C /data/web_static/releases/{}/"
+        .format(archive_filename, archive_filename))
+    if result.failed:
+        return False
+
+    # Delete the archive from the web server
+    result = run("rm /tmp/{}.tgz".format(archive_filename))
+    if result.failed:
+        return False
+    result = run(
+        "mv /data/web_static/releases/{}/web_static/* "
+        "/data/web_static/releases/{}/"
+        .format(archive_filename, archive_filename))
+    if result.failed:
+        return False
+    result = run(
+        "rm -rf /data/web_static/releases/{}/web_static"
+        .format(archive_filename))
+    if result.failed:
+        return False
+
+    # Create missing directories
+    result = run(
+        "mkdir -p /data/web_static/releases/{}/data/"
+        .format(archive_filename))
+    if result.failed:
+        return False
+
+    # Create a dummy HTML file
+    result = run(
+        "echo 'New version' > /data/web_static/releases/{}/data/index.html"
+        .format(archive_filename))
+    if result.failed:
+        return False
+
+    # Create a dummy custom HTML file
+    result = run(
+        "echo 'New custom version' > /data/web_static/releases/{}/data/my_index.html"
+        .format(archive_filename))
+    if result.failed:
+        return False
+
+    # Delete the symbolic link /data/web_static/current from the web server
+    result = run("rm -rf /data/web_static/current")
+    if result.failed:
+        return False
+
+    # Create a new symbolic link /data/web_static/current on the web server
+    result = run(
+        "ln -s /data/web_static/releases/{}/ /data/web_static/current"
+        .format(archive_filename))
+    if result.failed:
+        return False
+
+    return True
+
+
+def deploy():
+    """deployment(fully)"""
+    archive_pack = do_pack()
+    if archive_pack is None:
+        return False
+    deployed = do_deploy(archive_pack)
+    return deployed
+
+
+if __name__ == '__main__':
+    deploy()
