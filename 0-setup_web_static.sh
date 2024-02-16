@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# web static development
-ssh -i /root/.ssh/id_rsa ubuntu@107.20.20.164 <<EOF
-sudo apt-get -y update
-sudo apt-get -y upgrade
-sudo apt-get -y install nginx
-sudo mkdir -p /data/web_static/releases/test /data/web_static/shared
-echo "Hello, this is a test HTML file." | sudo tee /data/web_static/releases/test/index.html
-sudo rm -rf /data/web_static/current
-sudo ln -s /data/web_static/releases/test/ /data/web_static/current
-sudo chown -R ubuntu:ubuntu /data/
-sudo sed -i '44i \\\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t}' /etc/nginx/sites-available/default
-sudo service nginx restart
-EOF
+# Script that configures Nginx server with some folders and files
+apt-get -y update
+apt-get -y install nginx
+service nginx start
+mkdir -p /data/web_static/releases/test/
+mkdir -p /data/web_static/shared/
+echo "Holberton School" > /data/web_static/releases/test/index.html
+ln -sf /data/web_static/releases/test/ /data/web_static/current
+chown -R ubuntu:ubuntu /data/
+sed -i '38i\\tlocation /hbnb_static/ {\n\t\talias /data/web_static/current/;\n\t\tautoindex off;\n\t}\n' /etc/nginx/sites-available/default
+service nginx restart
+exit 0
