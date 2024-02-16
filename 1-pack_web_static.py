@@ -3,6 +3,7 @@
 from fabric.api import local, env
 from datetime import datetime
 
+
 def do_pack():
     """generates the tgz archive"""
     local("mkdir -p versions")
