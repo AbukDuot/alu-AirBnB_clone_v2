@@ -11,22 +11,6 @@ env.host = ['34.229.12.144', '107.20.20.164']
 env.user = "ubuntu"
 
 
-def do_pack():
-    """
-        return the archive path if archive has generated correctly.
-    """
-
-    local("mkdir -p versions")
-    date_now = datetime.now().strftime("%Y%m%d%H%M%S")
-    archived_file_path = "versions/web_static_{}.tgz".format(date_now)
-    tar_gzip_archive = local("tar -cvzf {} web_static".format(archived_file_path))
-
-    if tar_gzip_archive.succeeded:
-        return archived_file_path
-    else:
-        return None
-
-
 def do_deploy(archive_path):
     """
         Distribute archive.
@@ -50,3 +34,5 @@ def do_deploy(archive_path):
         return True
 
     return False
+if __name__ == '__main__':
+	do_deploy(archive_path)
