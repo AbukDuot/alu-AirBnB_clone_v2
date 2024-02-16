@@ -6,13 +6,13 @@ using the function do_deploy.
 from fabric.api import env, run, put, local
 import os
 
-env.hosts = ['34.229.12.144', '107.20.20.164']  # Example IP addresses
+
+env.hosts = ['34.229.12.144', '107.20.20.164']
 env.user = "ubuntu"
 
+
 def do_deploy(archive_path):
-    """
-    Deploys an archive to web servers.
-    """
+    """ Deploys an archive to web servers."""
     if not os.path.isfile(archive_path):
         return False
 
